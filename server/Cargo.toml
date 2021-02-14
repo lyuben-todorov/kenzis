@@ -1,0 +1,19 @@
+[package]
+name = "kenzis"
+version = "0.1.0"
+authors = ["Lyuben Todorov <lyuben.todorov@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+quinn = { git = "https://github.com/quinn-rs/quinn", branch = "main" }
+anyhow = "1.0.38"
+directories-next = "2"
+rand = "0.8"
+rcgen = "0.8"
+structopt = "0.3.0"
+tokio = { version = "1.0.1", features = ["full"] }
+futures = "0.3.12"
+pretty_env_logger = "0.4.0"
+log = "0.4.14"
