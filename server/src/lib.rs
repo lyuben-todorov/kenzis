@@ -5,6 +5,7 @@ use std::{fs, io};
 use log::{info};
 use anyhow::{Result, Context};
 use quinn::ServerConfigBuilder;
+use rustls::ServerCertVerified;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "server")]
@@ -69,6 +70,22 @@ pub fn fix_certs(options: &Opt, server_config: &mut ServerConfigBuilder) -> Resu
         server_config.certificate(quinn::CertificateChain::from_certs(vec![cert]), key)?;
     }
     Ok(())
+}
+
+
+// Implementation of `ServerCertVerifier` that verifies everything as trustworthy.
+struct SkipCertificationVerification;
+
+impl rustls::ServerCertVerifier for SkipCertificationVerification {
+    fn verify_server_cert(
+        &self,
+        _roots: &rustls::RootCertStore,
+        _presented_certs: &[rustls::Certificate],
+        _dns_name: webpki::DNSNameRef,
+        _ocsp_response: &[u8],
+    ) -> Result<rustls::ServerCertVerified, rustls::TLSError> {
+        Ok(ServerCertVerified::assertion())
+    }
 }
 
 #[allow(unused)]

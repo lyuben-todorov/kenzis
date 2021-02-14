@@ -3,22 +3,24 @@
 //! Checkout the `README.md` for guidance.
 
 use std::{
-    fs, io,
-    net::SocketAddr,
-    path::{PathBuf},
     sync::Arc,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Result};
 use futures::{StreamExt, TryFutureExt};
 use structopt::{self, StructOpt};
-use kenzis::{Opt, ALPN_QUIC_HTTP, fix_certs};
+use kenzis::{Opt, fix_certs};
+use std::net::SocketAddr;
 
 #[macro_use]
 extern crate log;
 extern crate pretty_env_logger;
 
 mod common;
+
+fn server_addr() -> SocketAddr {
+    "127.0.0.1:4433".parse::<SocketAddr>().unwrap()
+}
 
 fn main() -> Result<()> {
     pretty_env_logger::init();
@@ -27,25 +29,23 @@ fn main() -> Result<()> {
 }
 
 #[tokio::main]
-#[allow(clippy::field_reassign_with_default)] // https://github.com/rust-lang/rust-clippy/issues/6527
 async fn run(options: Opt) -> Result<()> {
     info!("Starting KenzisRPC server!");
-    let mut transport_config = quinn::TransportConfig::default();
+    let transport_config = quinn::TransportConfig::default();
     let mut server_config = quinn::ServerConfig::default();
     server_config.transport = Arc::new(transport_config);
     let mut server_config = quinn::ServerConfigBuilder::new(server_config);
-    server_config.protocols(ALPN_QUIC_HTTP);
 
     if options.stateless_retry {
         server_config.use_stateless_retry(true);
     }
 
-    fix_certs(&options, &mut server_config);
+    fix_certs(&options, &mut server_config).unwrap();
 
     let mut endpoint = quinn::Endpoint::builder();
     endpoint.listen(server_config.build());
 
-    let (endpoint, mut incoming) = endpoint.bind(&options.listen)?;
+    let (endpoint, mut incoming) = endpoint.bind(&server_addr())?;
     info!("listening on {}", endpoint.local_addr()?);
 
     while let Some(conn) = incoming.next().await {
@@ -61,7 +61,40 @@ async fn run(options: Opt) -> Result<()> {
 }
 
 async fn handle_connection(conn: quinn::Connecting) -> Result<()> {
-    
+    let quinn::NewConnection {
+        connection,
+        mut bi_streams,
+        ..
+    } = conn.await?;
+    async {
+        info!("established");
+
+        // Each stream initiated by the client constitutes a new request.
+        while let Some(stream) = bi_streams.next().await {
+            let stream = match stream {
+                Err(quinn::ConnectionError::ApplicationClosed { .. }) => {
+                    info!("connection closed");
+                    return Ok(());
+                }
+                Err(e) => {
+                    return Err(e);
+                }
+                Ok(s) => s,
+            };
+            tokio::spawn(
+                handle_request(stream)
+                    .unwrap_or_else(move |e| error!("failed: {reason}", reason = e.to_string()))
+            );
+        }
+        Ok(())
+    }
+        .await?;
     Ok(())
 }
 
+async fn handle_request(
+    (mut send, recv): (quinn::SendStream, quinn::RecvStream),
+) -> Result<()> {
+    info!("Req!");
+    Ok(())
+}

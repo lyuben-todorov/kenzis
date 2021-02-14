@@ -7,3 +7,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+quinn = { git = "https://github.com/quinn-rs/quinn", branch = "main" }
+anyhow = "1.0.38"
+tokio = { version = "1.0.1", features = ["full"] }
+futures = "0.3.12"
+pretty_env_logger = "0.4.0"
+log = "0.4.14"
+
+# TLS bypass
+rustls = { version = "*", features = ["dangerous_configuration", "quic"] }
+webpki = "0.21.4"
