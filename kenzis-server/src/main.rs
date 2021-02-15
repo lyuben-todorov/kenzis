@@ -16,7 +16,6 @@ use std::net::SocketAddr;
 extern crate log;
 extern crate pretty_env_logger;
 
-mod common;
 
 fn server_addr() -> SocketAddr {
     "127.0.0.1:4433".parse::<SocketAddr>().unwrap()
