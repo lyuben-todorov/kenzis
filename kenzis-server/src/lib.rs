@@ -6,6 +6,7 @@ use log::{info};
 use anyhow::{Result, Context};
 use quinn::ServerConfigBuilder;
 use rustls::ServerCertVerified;
+use std::sync::{RwLock, Arc};
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "server")]
@@ -72,3 +73,26 @@ pub fn fix_certs(options: &Opt, server_config: &mut ServerConfigBuilder) -> Resu
     Ok(())
 }
 
+pub enum SessionState {
+    CLOSED,
+    ESTABLISHED,
+}
+
+pub struct ClientSession {
+    state: SessionState,
+    id: u64,
+    timeout: u64,
+}
+
+impl ClientSession {
+    pub fn new() -> ClientSession {
+        ClientSession {
+            state: SessionState::CLOSED,
+            id: 0,
+            timeout: 30000,
+        }
+    }
+    pub fn new_context() -> Arc<RwLock<ClientSession>> {
+        Arc::new(RwLock::new(ClientSession::new()))
+    }
+}

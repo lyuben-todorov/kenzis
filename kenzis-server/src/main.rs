@@ -9,8 +9,9 @@ use std::{
 use anyhow::{Result};
 use futures::{StreamExt, TryFutureExt};
 use structopt::{self, StructOpt};
-use kenzis::{Opt, fix_certs};
+use kenzis::{Opt, fix_certs, ClientSession};
 use std::net::SocketAddr;
+use std::sync::RwLock;
 
 #[macro_use]
 extern crate log;
@@ -60,31 +61,29 @@ async fn run(options: Opt) -> Result<()> {
 }
 
 async fn handle_connection(conn: quinn::Connecting) -> Result<()> {
-    let quinn::NewConnection {
-        connection,
-        mut bi_streams,
-        ..
-    } = conn.await?;
-    async {
-        info!("established");
+    let mut connection = conn.await.unwrap();
+    let state = ClientSession::new_context();
+    info!("Established session");
 
-        // Each stream initiated by the client constitutes a new request.
-        while let Some(Ok(stream)) = bi_streams.next().await {
-            tokio::spawn(
-                handle_request(stream)
-                    .unwrap_or_else(move |e| error!("failed: {reason}", reason = e.to_string()))
-            );
-        }
-        Ok(())
-    }.await?;
+    while let Some(Ok((sent, recv))) =  connection.bi_streams.next().await {
+        // Because it is a bidirectional stream, we can both sent and recieve.
+        tokio::spawn(
+            handle_request((sent,recv), state.clone())
+                .unwrap_or_else(move |e| error!("failed: {reason}", reason = e.to_string()))
+        );
+    }
+
     Ok(())
 }
 
 async fn handle_request(
     (mut send, recv): (quinn::SendStream, quinn::RecvStream),
+    session: Arc<RwLock<ClientSession>>
 ) -> Result<()> {
-    info!("Req!");
-    let bytes = recv.read_to_end(0).await.unwrap();
+    info!("client opened stream");
+
+
+    let bytes = recv.read_to_end(50).await.unwrap();
     let message = String::from_utf8(bytes).unwrap();
     println!("{}",message);
     Ok(())

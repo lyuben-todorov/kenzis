@@ -1,12 +1,17 @@
 namespace KenzisProto;
 
+/*
+Client -> Server communication
+*/
+
+// Client metadata it would like to share
 table ClientInfo {
     id: int32;
 }
+
 table SessionSettings {
     timeout: uint32;
 }
-
 
 table ClientProcedureCall {
     call_identifier: uint64;
@@ -18,4 +23,26 @@ table ClientProcedureCall {
 table ClientInit {
     meta: ClientInfo;
     settings: SessionSettings;
+}
+
+table ClientParcel {
+    init_packet: ClientInit; // Should be included on first request
+    rpc_packet: ClientProcedureCall;
+}
+
+/*
+Server -> Client communication
+*/
+enum ServerError: byte {
+    SESSION_INVALID
+}
+
+// Server metadata it would like to share
+table ServerInfo {
+    version: float32 = 0.1;
+}
+table ServerPracel {
+    meta: ServerInfo;
+    error_packet:ServerError; // Presence of this represents an error
+    rpc_result_packet: [ubyte] (flexbuffer);
 }

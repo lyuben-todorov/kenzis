@@ -1,17 +1,19 @@
 mod proto_generated;
 
-pub mod proto {
-    pub struct ClientMeta {
+pub mod proto {}
+
+pub mod network {
+    pub fn write_buffer(buf: Vec<u8>) {
 
     }
 
+    pub fn read_buffer() {}
 }
-
-
 
 pub mod security {
     use std::fs;
     use rustls::ServerCertVerified;
+
     // Implementation of `ServerCertVerifier` that verifies everything as trustworthy.
     struct SkipCertificationVerification;
 
@@ -29,5 +31,4 @@ pub mod security {
 
     #[allow(unused)]
     pub const ALPN_QUIC_HTTP: &[&[u8]] = &[b"hq-29"];
-
 }

@@ -65,7 +65,9 @@ async fn main() -> anyhow::Result<()> {
         .await
         .map_err(|e| anyhow!("failed to open stream: {}", e))?;
 
-    send.write_all("kur".as_bytes());
+    send.write_all(b"kur").await?;
+    send.finish().await?;
     // Start transferring, receiving data, see data transfer page.
     Ok(())
 }
+

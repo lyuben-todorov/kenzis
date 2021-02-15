@@ -17,6 +17,63 @@ pub mod kenzis_proto {
   extern crate flatbuffers;
   use self::flatbuffers::EndianScalar;
 
+#[allow(non_camel_case_types)]
+#[repr(i8)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub enum ServerError {
+  SESSION_INVALID = 0,
+
+}
+
+pub const ENUM_MIN_SERVER_ERROR: i8 = 0;
+pub const ENUM_MAX_SERVER_ERROR: i8 = 0;
+
+impl<'a> flatbuffers::Follow<'a> for ServerError {
+  type Inner = Self;
+  #[inline]
+  fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+    flatbuffers::read_scalar_at::<Self>(buf, loc)
+  }
+}
+
+impl flatbuffers::EndianScalar for ServerError {
+  #[inline]
+  fn to_little_endian(self) -> Self {
+    let n = i8::to_le(self as i8);
+    let p = &n as *const i8 as *const ServerError;
+    unsafe { *p }
+  }
+  #[inline]
+  fn from_little_endian(self) -> Self {
+    let n = i8::from_le(self as i8);
+    let p = &n as *const i8 as *const ServerError;
+    unsafe { *p }
+  }
+}
+
+impl flatbuffers::Push for ServerError {
+    type Output = ServerError;
+    #[inline]
+    fn push(&self, dst: &mut [u8], _rest: &[u8]) {
+        flatbuffers::emplace_scalar::<ServerError>(dst, *self);
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub const ENUM_VALUES_SERVER_ERROR:[ServerError; 1] = [
+  ServerError::SESSION_INVALID
+];
+
+#[allow(non_camel_case_types)]
+pub const ENUM_NAMES_SERVER_ERROR:[&'static str; 1] = [
+    "SESSION_INVALID"
+];
+
+pub fn enum_name_server_error(e: ServerError) -> &'static str {
+  let index = e as i8;
+  ENUM_NAMES_SERVER_ERROR[index as usize]
+}
+
 pub enum ClientInfoOffset {}
 #[derive(Copy, Clone, Debug, PartialEq)]
 
@@ -364,6 +421,270 @@ impl<'a: 'b, 'b> ClientInitBuilder<'a, 'b> {
   }
   #[inline]
   pub fn finish(self) -> flatbuffers::WIPOffset<ClientInit<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+pub enum ClientParcelOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct ClientParcel<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for ClientParcel<'a> {
+    type Inner = ClientParcel<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> ClientParcel<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        ClientParcel {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        args: &'args ClientParcelArgs<'args>) -> flatbuffers::WIPOffset<ClientParcel<'bldr>> {
+      let mut builder = ClientParcelBuilder::new(_fbb);
+      if let Some(x) = args.rpc_packet { builder.add_rpc_packet(x); }
+      if let Some(x) = args.init_packet { builder.add_init_packet(x); }
+      builder.finish()
+    }
+
+    pub const VT_INIT_PACKET: flatbuffers::VOffsetT = 4;
+    pub const VT_RPC_PACKET: flatbuffers::VOffsetT = 6;
+
+  #[inline]
+  pub fn init_packet(&self) -> Option<ClientInit<'a>> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<ClientInit<'a>>>(ClientParcel::VT_INIT_PACKET, None)
+  }
+  #[inline]
+  pub fn rpc_packet(&self) -> Option<ClientProcedureCall<'a>> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<ClientProcedureCall<'a>>>(ClientParcel::VT_RPC_PACKET, None)
+  }
+}
+
+pub struct ClientParcelArgs<'a> {
+    pub init_packet: Option<flatbuffers::WIPOffset<ClientInit<'a >>>,
+    pub rpc_packet: Option<flatbuffers::WIPOffset<ClientProcedureCall<'a >>>,
+}
+impl<'a> Default for ClientParcelArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        ClientParcelArgs {
+            init_packet: None,
+            rpc_packet: None,
+        }
+    }
+}
+pub struct ClientParcelBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> ClientParcelBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_init_packet(&mut self, init_packet: flatbuffers::WIPOffset<ClientInit<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ClientInit>>(ClientParcel::VT_INIT_PACKET, init_packet);
+  }
+  #[inline]
+  pub fn add_rpc_packet(&mut self, rpc_packet: flatbuffers::WIPOffset<ClientProcedureCall<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ClientProcedureCall>>(ClientParcel::VT_RPC_PACKET, rpc_packet);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ClientParcelBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    ClientParcelBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<ClientParcel<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+pub enum ServerInfoOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct ServerInfo<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for ServerInfo<'a> {
+    type Inner = ServerInfo<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> ServerInfo<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        ServerInfo {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        args: &'args ServerInfoArgs) -> flatbuffers::WIPOffset<ServerInfo<'bldr>> {
+      let mut builder = ServerInfoBuilder::new(_fbb);
+      builder.add_version(args.version);
+      builder.finish()
+    }
+
+    pub const VT_VERSION: flatbuffers::VOffsetT = 4;
+
+  #[inline]
+  pub fn version(&self) -> f32 {
+    self._tab.get::<f32>(ServerInfo::VT_VERSION, Some(0.1)).unwrap()
+  }
+}
+
+pub struct ServerInfoArgs {
+    pub version: f32,
+}
+impl<'a> Default for ServerInfoArgs {
+    #[inline]
+    fn default() -> Self {
+        ServerInfoArgs {
+            version: 0.1,
+        }
+    }
+}
+pub struct ServerInfoBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> ServerInfoBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_version(&mut self, version: f32) {
+    self.fbb_.push_slot::<f32>(ServerInfo::VT_VERSION, version, 0.1);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ServerInfoBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    ServerInfoBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<ServerInfo<'a>> {
+    let o = self.fbb_.end_table(self.start_);
+    flatbuffers::WIPOffset::new(o.value())
+  }
+}
+
+pub enum ServerPracelOffset {}
+#[derive(Copy, Clone, Debug, PartialEq)]
+
+pub struct ServerPracel<'a> {
+  pub _tab: flatbuffers::Table<'a>,
+}
+
+impl<'a> flatbuffers::Follow<'a> for ServerPracel<'a> {
+    type Inner = ServerPracel<'a>;
+    #[inline]
+    fn follow(buf: &'a [u8], loc: usize) -> Self::Inner {
+        Self {
+            _tab: flatbuffers::Table { buf: buf, loc: loc },
+        }
+    }
+}
+
+impl<'a> ServerPracel<'a> {
+    #[inline]
+    pub fn init_from_table(table: flatbuffers::Table<'a>) -> Self {
+        ServerPracel {
+            _tab: table,
+        }
+    }
+    #[allow(unused_mut)]
+    pub fn create<'bldr: 'args, 'args: 'mut_bldr, 'mut_bldr>(
+        _fbb: &'mut_bldr mut flatbuffers::FlatBufferBuilder<'bldr>,
+        args: &'args ServerPracelArgs<'args>) -> flatbuffers::WIPOffset<ServerPracel<'bldr>> {
+      let mut builder = ServerPracelBuilder::new(_fbb);
+      if let Some(x) = args.rpc_result_packet { builder.add_rpc_result_packet(x); }
+      if let Some(x) = args.meta { builder.add_meta(x); }
+      builder.add_error_packet(args.error_packet);
+      builder.finish()
+    }
+
+    pub const VT_META: flatbuffers::VOffsetT = 4;
+    pub const VT_ERROR_PACKET: flatbuffers::VOffsetT = 6;
+    pub const VT_RPC_RESULT_PACKET: flatbuffers::VOffsetT = 8;
+
+  #[inline]
+  pub fn meta(&self) -> Option<ServerInfo<'a>> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<ServerInfo<'a>>>(ServerPracel::VT_META, None)
+  }
+  #[inline]
+  pub fn error_packet(&self) -> ServerError {
+    self._tab.get::<ServerError>(ServerPracel::VT_ERROR_PACKET, Some(ServerError::SESSION_INVALID)).unwrap()
+  }
+  #[inline]
+  pub fn rpc_result_packet(&self) -> Option<&'a [u8]> {
+    self._tab.get::<flatbuffers::ForwardsUOffset<flatbuffers::Vector<'a, u8>>>(ServerPracel::VT_RPC_RESULT_PACKET, None).map(|v| v.safe_slice())
+  }
+}
+
+pub struct ServerPracelArgs<'a> {
+    pub meta: Option<flatbuffers::WIPOffset<ServerInfo<'a >>>,
+    pub error_packet: ServerError,
+    pub rpc_result_packet: Option<flatbuffers::WIPOffset<flatbuffers::Vector<'a ,  u8>>>,
+}
+impl<'a> Default for ServerPracelArgs<'a> {
+    #[inline]
+    fn default() -> Self {
+        ServerPracelArgs {
+            meta: None,
+            error_packet: ServerError::SESSION_INVALID,
+            rpc_result_packet: None,
+        }
+    }
+}
+pub struct ServerPracelBuilder<'a: 'b, 'b> {
+  fbb_: &'b mut flatbuffers::FlatBufferBuilder<'a>,
+  start_: flatbuffers::WIPOffset<flatbuffers::TableUnfinishedWIPOffset>,
+}
+impl<'a: 'b, 'b> ServerPracelBuilder<'a, 'b> {
+  #[inline]
+  pub fn add_meta(&mut self, meta: flatbuffers::WIPOffset<ServerInfo<'b >>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<ServerInfo>>(ServerPracel::VT_META, meta);
+  }
+  #[inline]
+  pub fn add_error_packet(&mut self, error_packet: ServerError) {
+    self.fbb_.push_slot::<ServerError>(ServerPracel::VT_ERROR_PACKET, error_packet, ServerError::SESSION_INVALID);
+  }
+  #[inline]
+  pub fn add_rpc_result_packet(&mut self, rpc_result_packet: flatbuffers::WIPOffset<flatbuffers::Vector<'b , u8>>) {
+    self.fbb_.push_slot_always::<flatbuffers::WIPOffset<_>>(ServerPracel::VT_RPC_RESULT_PACKET, rpc_result_packet);
+  }
+  #[inline]
+  pub fn new(_fbb: &'b mut flatbuffers::FlatBufferBuilder<'a>) -> ServerPracelBuilder<'a, 'b> {
+    let start = _fbb.start_table();
+    ServerPracelBuilder {
+      fbb_: _fbb,
+      start_: start,
+    }
+  }
+  #[inline]
+  pub fn finish(self) -> flatbuffers::WIPOffset<ServerPracel<'a>> {
     let o = self.fbb_.end_table(self.start_);
     flatbuffers::WIPOffset::new(o.value())
   }
