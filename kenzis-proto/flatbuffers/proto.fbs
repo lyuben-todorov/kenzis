@@ -1,0 +1,21 @@
+namespace KenzisProto;
+
+table ClientInfo {
+    id: int32;
+}
+table SessionSettings {
+    timeout: uint32;
+}
+
+
+table ClientProcedureCall {
+    call_identifier: uint64;
+    path: [ubyte] (flexbuffer);
+    args: [ubyte] (flexbuffer);
+    deadline: uint;
+}
+
+table ClientInit {
+    meta: ClientInfo;
+    settings: SessionSettings;
+}

@@ -2,6 +2,7 @@ use quinn::{Endpoint, NewConnection, ClientConfig};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use rustls::ServerCertVerified;
+use anyhow::anyhow;
 
 static SERVER_NAME: &str = "localhost";
 
@@ -55,7 +56,16 @@ async fn main() -> anyhow::Result<()> {
     let connection: NewConnection = endpoint
         .connect(&server_addr(), SERVER_NAME)?
         .await?;
+    let quinn::NewConnection {
+        connection: conn, ..
+    } = connection;
 
+    let (mut send, recv) = conn
+        .open_bi()
+        .await
+        .map_err(|e| anyhow!("failed to open stream: {}", e))?;
+
+    send.write_all("kur".as_bytes());
     // Start transferring, receiving data, see data transfer page.
     Ok(())
 }

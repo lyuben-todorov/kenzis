@@ -1,4 +1,9 @@
+mod proto_generated;
+
 pub mod proto {
+    pub struct ClientMeta {
+
+    }
 
 }
 

@@ -69,25 +69,14 @@ async fn handle_connection(conn: quinn::Connecting) -> Result<()> {
         info!("established");
 
         // Each stream initiated by the client constitutes a new request.
-        while let Some(stream) = bi_streams.next().await {
-            let stream = match stream {
-                Err(quinn::ConnectionError::ApplicationClosed { .. }) => {
-                    info!("connection closed");
-                    return Ok(());
-                }
-                Err(e) => {
-                    return Err(e);
-                }
-                Ok(s) => s,
-            };
+        while let Some(Ok(stream)) = bi_streams.next().await {
             tokio::spawn(
                 handle_request(stream)
                     .unwrap_or_else(move |e| error!("failed: {reason}", reason = e.to_string()))
             );
         }
         Ok(())
-    }
-        .await?;
+    }.await?;
     Ok(())
 }
 
@@ -95,5 +84,8 @@ async fn handle_request(
     (mut send, recv): (quinn::SendStream, quinn::RecvStream),
 ) -> Result<()> {
     info!("Req!");
+    let bytes = recv.read_to_end(0).await.unwrap();
+    let message = String::from_utf8(bytes).unwrap();
+    println!("{}",message);
     Ok(())
 }
